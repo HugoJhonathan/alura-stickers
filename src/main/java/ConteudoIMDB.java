@@ -1,0 +1,1 @@
+public record ConteudoIMDB(String titulo, String urlImagem, String imdbRating, String rank){}

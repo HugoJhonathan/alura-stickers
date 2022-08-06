@@ -1,12 +1,8 @@
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.List;
-import java.util.Map;
+import java.util.Scanner;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -25,63 +21,97 @@ public class App {
 
         String apiKey = System.getenv("API_KEY");
 
-        // [1]. Fazer uma conexão HTTP e buscar os tops 250 filmes
-        String url = "https://mocki.io/v1/9a7c1ca9-29b4-4eb3-8306-1adb9d159060";
-        HttpClient client = HttpClient.newHttpClient();
-        URI endereco = URI.create(url);
-        HttpRequest request = HttpRequest.newBuilder(endereco).GET().build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        String body = response.body();
+        Scanner sc = new Scanner(System.in);
 
-        // [2]. Extrair só os dados que interessam (titulo, poster, classificação
-        var parser = new JsonParser();
-        List<Map<String, String>> listaDeFilmes = parser.parse(body);
-        
-        // [3]. Exibir e manipular os dados
-        System.out.println();
-        int index = 0;
+        System.out.println("\n"+ANSI_BOLD+"Qual API gerar?"+ANSI_RESET+
+                "\n1 - Filmes" +
+                "\n2 - Linguagens");
+        Integer escolha = sc.nextInt();
 
-        var geradora = new GeradoraDeFigurinhas();
-        for (Map<String, String> filme : listaDeFilmes) {
+        String url = Config.getEnum(escolha).getS();
 
-            PrintStream out = new PrintStream(System.out, true, UTF_8);
+        ExtratorDeConteudo extrator = Config.getEnum(escolha).getExtratorDeConteudo();
 
-            ANSI_BACKGROUND_TABLE = index % 2 == 0 ? "\u200B\u001b[48;2;43;43;43m" : "\u200B\u001b[48;2;60;63;65m";
-            ANSI_RESET = "\u001B[0m" + ANSI_BACKGROUND_TABLE;
-            index++;
+        String json = new ClienteHttp().buscaDados(url);
 
-            System.out.println(ANSI_BACKGROUND_TABLE);
-            double rating = Double.parseDouble(filme.get("imDbRating"));
-            String estrelas = "";
+        PrintStream out = new PrintStream(System.out, true, UTF_8);
 
-            for(int i = 0; i<10; i++){
-                if(i < (int) rating){
-                    estrelas = estrelas.concat(ANSI_YELLOW+"\u2605"+ANSI_RESET);
-                }else{
-                    estrelas = estrelas.concat(ANSI_YELLOW+"\u2606"+ANSI_RESET);
-                }
-            }
+        if(escolha == 1){
 
-            InputStream inputStream;
-            String urlPosterAltaQualidade = filme.get("image").replaceAll(".\\w{13}\\,\\d\\,\\w{3}\\,\\w{7}","");
+            List<ConteudoIMDB> conteudos = extrator.extraiConteudos(json);
 
-            out.println(SPACING+"Rank  : #"+ANSI_BOLD+filme.get("rank")+ANSI_RESET);
-            out.println(SPACING+"Title : "+ANSI_BOLD+filme.get("title")+ANSI_RESET);
-            out.println(SPACING+"Poster: "+ANSI_BOLD+urlPosterAltaQualidade+ANSI_RESET);
-            out.println(SPACING+ANSI_BLACK+ANSI_GREEN_BACKGROUND+" Rating: \u001b[1m"+filme.get("imDbRating")+"  "+ANSI_RESET);
+            var geradora = new GeradoraDeFigurinhasIMDB();
+            for (int i = 0; i < conteudos.size(); i++) {
+
+                var conteudo = conteudos.get(i);
+
+                ANSI_BACKGROUND_TABLE = i % 2 == 0 ? "\u200B\u001b[48;2;43;43;43m" : "\u200B\u001b[48;2;60;63;65m";
+                ANSI_RESET = "\u001B[0m" + ANSI_BACKGROUND_TABLE;
+
+                System.out.println(ANSI_BACKGROUND_TABLE);
+
+            double rating = Double.parseDouble(conteudo.imdbRating());
+
+            var estrelas = new EstrelasDeClassificacao().gerarString(rating);
+
+            out.println(SPACING+"Rank  : #"+ANSI_BOLD+conteudo.rank()+ANSI_RESET);
+                out.println(SPACING+"Title : "+ANSI_BOLD+conteudo.titulo()+ANSI_RESET);
+                out.println(SPACING+"Poster: "+ANSI_BOLD+conteudo.urlImagem()+ANSI_RESET);
+            out.println(SPACING+ANSI_BLACK+ANSI_GREEN_BACKGROUND+" Rating: \u001b[1m"+conteudo.imdbRating()+"  "+ANSI_RESET);
             out.println(SPACING+estrelas);
-            out.println();
+                out.println();
 
-            try {
-                inputStream = new URL(urlPosterAltaQualidade).openStream();
-            }catch (Exception e) {
-                // default cover
-                inputStream = new URL("https://m.media-amazon.com/images/M/MV5BMGVmMWNiMDktYjQ0Mi00MWIxLTk0N2UtN2ZlYTdkN2IzNDNlXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_UX128_CR0,3,128,176_AL_.jpg").openStream();
+                InputStream inputStream;
+
+                try {
+                    inputStream = new URL(conteudo.urlImagem()).openStream();
+                }catch (Exception e) {
+                    // default cover
+                    System.out.println("\u001b[31;1m Não foi possível ler esta imagem");
+                    inputStream = new URL("https://i.imgur.com/VHxP6Zx.png").openStream();
+                }
+
+                String nomeArquivo = conteudo.rank()+". "+conteudo.titulo()+".png";
+                geradora.cria(inputStream, nomeArquivo,  "RATING: "+conteudo.imdbRating(), conteudo.rank(), Double.parseDouble(conteudo.imdbRating()));
+                System.out.print(ANSI_RESET_ALL);
+
             }
-            String nomeArquivo = filme.get("rank")+". "+filme.get("title")+".png";
-            geradora.cria(inputStream, nomeArquivo, "RATING: "+filme.get("imDbRating"), filme.get("rank"), rating);
-            System.out.print(ANSI_RESET_ALL);
-          }
+        }else if(escolha == 2){
+
+            List<ConteudoNASA> conteudos = extrator.extraiConteudos(json);
+
+            var geradora = new GeradoraDeFigurinhasLinguagem();
+
+            for (int i = 0; i < conteudos.size(); i++) {
+
+                var conteudo = conteudos.get(i);
+
+                ANSI_BACKGROUND_TABLE = i % 2 == 0 ? "\u200B\u001b[48;2;43;43;43m" : "\u200B\u001b[48;2;60;63;65m";
+                ANSI_RESET = "\u001B[0m" + ANSI_BACKGROUND_TABLE;
+
+                System.out.println(ANSI_BACKGROUND_TABLE);
+
+                out.println(SPACING+"Title : "+ANSI_BOLD+conteudo.titulo()+ANSI_RESET);
+                out.println(SPACING+"Poster: "+ANSI_BOLD+conteudo.urlImagem()+ANSI_RESET);
+                out.println(SPACING+"Ranking: "+ANSI_BOLD+conteudo.ranking()+ANSI_RESET);
+                out.println();
+
+                InputStream inputStream;
+
+                try {
+                    inputStream = new URL(conteudo.urlImagem()).openStream();
+                }catch (Exception e) {
+                    // default cover
+                    System.out.println("\u001b[31;1m Não foi possível ler esta imagem");
+                    inputStream = new URL("https://i.imgur.com/VHxP6Zx.png").openStream();
+                }
+
+                String nomeArquivo = "" + conteudo.titulo() + ".png";
+                geradora.cria(inputStream, nomeArquivo, conteudo.titulo());
+                System.out.print(ANSI_RESET_ALL);
+
+            }
+        }
         System.out.println("Finalizado!");
     }
 }
