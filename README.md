@@ -1,32 +1,57 @@
 <img height="30px" src="https://i.imgur.com/pL1Tneg.png">
 
-| Vitrine.Dev    |     |
-| -------------  | --- |
-| ✨ Nome        | Alura Sticker
-| 🏷️ Tecnologias | Java, Spring, MongoDB, Heroku, Git
-| 🚀 URL         | https://linguagens-imersao-api.herokuapp.com/linguagens
-| 🤿 Desafio     | https://www.alura.com.br/imersao-java
+# [1] Comsumindo API de Filmes
+Nesta primeira aula, construimos uma aplicação do zero para consumir a API do IMDb e exibir os filmes mais populares, destacando seus pôsteres e visualizando sua classificação... Tudo isso sem usar nenhuma biblioteca externa!
 
-## 1º Dia (Comsumindo API de Filmes)
-  - [x] Buscar filmes mais populares
-  - [x] Apresentar notas com emoji de estrela
-  - [x] Colocar chave da API em um local fora do código fonte
-
-_Nesta primeira aula, construimos uma aplicação do zero para consumir a API do IMDb e exibir os filmes mais populares, destacando seus pôsteres e visualizando sua classificação... Tudo isso sem usar nenhuma biblioteca externa!_
-
-### ✅ Resultado
 ![](https://i.imgur.com/9pkCyp5.png)
 
-## __2º Dia (Gerando figurinhas para WhatsApp)__
-  - [x] Criar diretório de saída das imagens, se ainda não existir.
-  - [x] Colocar outra fonte como a Comic Sans ou a Impact, a fonte usada em memes.
-  - [x] Tratar as imagens retornadas pela API do IMDB para pegar uma imagem maior ao invés dos thumbnails. Opções: pegar a URL da imagem e remover o trecho mostrado durante a aula ou consumir o endpoint de posters da API do IMDB (mais trabalhoso), tratando o JSON retornado.
-  - [x] Fazer com que o texto da figurinha seja personalizado de acordo com as classificações do IMDB.
-  
-_Nesta segunda aula criamos um gerador de figurinhas explorando outras bibliotecas nativas do Java, para que possamos enviar por Whatsapp os nossos filmes preferidos!_
+# [2] Gerando figurinhas para WhatsApp
+Nesta segunda aula criamos um gerador de figurinhas explorando outras bibliotecas nativas do Java, para que possamos enviar por Whatsapp os nossos filmes preferidos!
 
-### ✅ Resultado
-![](https://i.imgur.com/JRpH8tu.png)
+![](https://i.imgur.com/3lbPcEU.png)
+
+
+# [3] Ligando as pontas, Refatoração e Orientação a Objetos
+Chegou o momento de pegarmos os filmes do IMDb e gerar figurinhas com os pôsteres, aproveitando para melhorar nosso código com as refatorações necessárias para torná-lo mais flexível e fácil de entender.
+
+# [4] Criando nossa própria API com Spring
+Agora vamos construir uma API REST para expor nosso próprio conteúdo, utilizando ferramentas profissionais como o Spring Framework e um banco de dados NoSQL (MongoDB).
+
+[Projeto da API](https://github.com/HugoJhonathan/alura-stickers/tree/api)
+
+| Method | URL | Result |
+|--------|------|-------|
+|**[GET](https://github.com/HugoJhonathan/alura-stickers/blob/api/linguagens-api/src/main/java/br/com/alura/linguagens/api/LinguagemController.java#L23)**     | `http://localhost:8080/linguagens`      | Lista todas as Linguagens ordenadas pelo **`ranking`**. |
+|**[POST](https://github.com/HugoJhonathan/alura-stickers/blob/api/linguagens-api/src/main/java/br/com/alura/linguagens/api/LinguagemController.java#L29)**    | `http://localhost:8080/linguagens`      | Cria uma nova Linguagem, passando **`title`** **`image`** e **`ranking`** no corpo da requisição. |
+|**[PATCH](https://github.com/HugoJhonathan/alura-stickers/blob/api/linguagens-api/src/main/java/br/com/alura/linguagens/api/LinguagemController.java#L45)**   | `http://localhost:8080/linguagens/{id}` | Incrementa em 1 o **`ranking`** da Linguagem cujo **`id`** foi passado no parâmetro. |
+|**[DELETE](https://github.com/HugoJhonathan/alura-stickers/blob/api/linguagens-api/src/main/java/br/com/alura/linguagens/api/LinguagemController.java#L39)**  | `http://localhost:8080/linguagens/{id}` | Deleta uma Linguagem cujo **`id`** foi passado no parâmetro. |
+
+## 👽 Utilizando o nosso gerador de Figurinhas para gerar as imagens das Linguagens vinda da API
+
+![](https://i.imgur.com/VDuUSu3.png)
+
+````json
+[
+    {
+        "id": "62ed8ad2ec665976f7f6ff14",
+        "title": "C",
+        "image": "https://github.com/abrahamcalf/programming-languages-logos/blob/master/src/c/c.png?raw=true",
+        "ranking": "4"
+    },
+    {
+        "id": "62ed8b0dec665976f7f6ff15",
+        "title": "Cpp",
+        "image": "https://github.com/abrahamcalf/programming-languages-logos/blob/master/src/cpp/cpp.png?raw=true",
+        "ranking": "1"
+    },
+    {
+        "id": "62ed8b22ec665976f7f6ff16",
+        "title": "Csharp",
+        "image": "https://github.com/abrahamcalf/programming-languages-logos/blob/master/src/csharp/csharp.png?raw=true",
+        "ranking": "1"
+    }
+]
+````
 
 <br>
 <br>
